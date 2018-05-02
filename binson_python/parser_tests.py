@@ -1,7 +1,7 @@
 import unittest
 
-from .. import Binson
-from .. import BinsonException
+from . import Binson
+from . import BinsonException
 
 class TestParser(unittest.TestCase):
 
@@ -33,8 +33,10 @@ class TestParser(unittest.TestCase):
 		for key in obj.keys():
 			self.assertTrue(False)
 
-	def test_single_string(self):
+		self.assertEqual(Binson().toBytes(), bytearray([0x40, 0x41]))
+		self.assertEqual(Binson.fromJSON('{}').toBytes(), bytearray([0x40, 0x41]))
 
+	def test_single_string(self):
 		# {A:"B"}
 		rawBytes = bytearray([
 			0x40,
@@ -54,6 +56,9 @@ class TestParser(unittest.TestCase):
 		self.assertRaises(BinsonException, Binson().getFloat, 'A')
 		self.assertEqual(obj.toBytes(), rawBytes)
 
+		self.assertEqual(Binson().put('A', 'B').toBytes(), rawBytes)
+		self.assertEqual(Binson.fromJSON('{"A":"B"}').toBytes(), rawBytes)
+
 		# {A:"C"}
 		rawBytes = bytearray([
 			0x40,
@@ -64,6 +69,8 @@ class TestParser(unittest.TestCase):
 		obj = Binson().fromBytes(rawBytes)
 		self.assertEqual('C', obj.getString('A'))
 		self.assertEqual(obj.toBytes(), rawBytes)
+		self.assertEqual(Binson().put('A', 'C').toBytes(), rawBytes)
+		self.assertEqual(Binson.fromJSON('{"A":"C"}').toBytes(), rawBytes)
 
 		# {name:"val"}
 		rawBytes = bytearray([
@@ -75,6 +82,9 @@ class TestParser(unittest.TestCase):
 		obj = Binson().fromBytes(rawBytes)
 		self.assertEqual('val', obj.getString('name'))
 		self.assertEqual(obj.toBytes(), rawBytes)
+		b = Binson().put('name', 'val')
+		self.assertEqual(b.toBytes(), rawBytes)
+		self.assertEqual(Binson.fromJSON('{"name":"val"}').toBytes(), rawBytes)
 
 	def test_multiple_strings(self):
 
@@ -91,6 +101,9 @@ class TestParser(unittest.TestCase):
 		self.assertEqual('C', obj.getString('A'))
 		self.assertEqual('D', obj.getString('B'))
 		self.assertEqual(obj.toBytes(), rawBytes)
+		b = Binson().put('A', 'C').put('B', 'D')
+		self.assertEqual(b.toBytes(), rawBytes)
+		self.assertEqual(Binson.fromJSON('{"A":"C","B":"D"}').toBytes(), rawBytes)
 
 	def test_duplicate(self):
 
@@ -122,6 +135,9 @@ class TestParser(unittest.TestCase):
 		self.assertRaises(BinsonException, obj.getString, 'A')
 		self.assertEqual('B', obj.getObject('A').getString('A'))
 		self.assertEqual(obj.toBytes(), rawBytes)
+		b = Binson().put('A', Binson().put('A', 'B'))
+		self.assertEqual(b.toBytes(), rawBytes)
+		self.assertEqual(Binson.fromJSON('{"A":{"A":"B"}}').toBytes(), rawBytes)
 
 	def test_bool(self):
 		rawBytes = bytearray([
@@ -136,6 +152,8 @@ class TestParser(unittest.TestCase):
 		self.assertEqual(True, obj.getBool('A'))
 		self.assertEqual(False, obj.getBool('B'))
 		self.assertEqual(obj.toBytes(), rawBytes)
+		b = Binson().put('A', True).put('B', False)
+		self.assertEqual(b.toBytes(), rawBytes)
 
 	def test_integer8(self):
 		rawBytes = bytearray([
@@ -153,6 +171,13 @@ class TestParser(unittest.TestCase):
 		self.assertEqual(1, obj.getInteger('C'))
 		self.assertEqual(2**7 - 1, obj.getInteger('D'))
 		self.assertEqual(obj.toBytes(), rawBytes)
+		b = Binson()
+		b.put('A', -128)
+		b.put('B', 0)
+		b.put('C', 1)
+		b.put('D', 127)
+		self.assertEqual(b.toBytes(), rawBytes)
+
 
 	def test_integer16(self):
 		rawBytes = bytearray([
@@ -229,6 +254,26 @@ class TestParser(unittest.TestCase):
 		ch = zObj.getArray('ch')
 		self.assertTrue(isinstance(ch[0], bytearray))
 		self.assertEqual(obj.toBytes(), rawBytes)
+
+		rawBytes = bytearray([
+			0x40, 0x14, 0x01, 0x61, 0x18, 0x01, 0x00,
+			0x14, 0x02, 0x66, 0x72, 0x18, 0x20, 0x55, 0x29,
+			0xce, 0x8c, 0xcf, 0x68, 0xc0, 0xb8, 0xac, 0x19,
+			0xd4, 0x37, 0xab, 0x0f, 0x5b, 0x32, 0x72, 0x37,
+			0x82, 0x60, 0x8e, 0x93, 0xc6, 0x26, 0x4f, 0x18,
+			0x4b, 0xa1, 0x52, 0xc2, 0x35, 0x7b, 0x14, 0x01,
+			0x70, 0x42, 0x18, 0x01, 0x0b, 0x14, 0x02, 0x6c,
+			0x75, 0x43, 0x14, 0x02, 0x74, 0x63, 0x18, 0x0c,
+			0x50, 0x01, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
+			0xff, 0x7f, 0x00, 0x00, 0x14, 0x02, 0x74, 0x6e,
+			0x14, 0x03, 0x42, 0x6f, 0x62, 0x14, 0x02, 0x74,
+			0x6f, 0x18, 0x20, 0x07, 0xe2, 0x8d, 0x4e, 0xe3,
+			0x2b, 0xfd, 0xc4, 0xb0, 0x7d, 0x41, 0xc9, 0x21,
+			0x93, 0xc0, 0xc2, 0x5e, 0xe6, 0xb3, 0x09, 0x4c,
+			0x62, 0x96, 0xf3, 0x73, 0x41, 0x3b, 0x37, 0x3d,
+			0x36, 0x16, 0x8b, 0x41
+		])
+		obj = Binson().fromBytes(rawBytes)
 			
 
 if __name__ == '__main__':

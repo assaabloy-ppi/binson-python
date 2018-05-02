@@ -1,13 +1,13 @@
 import struct
 import six # Used for supporting python 2 and 3 string types
 import sys
+from builtins import int
+import json
 
 # Workaround for python 2 and 3 support
 if sys.version_info > (3,):
-	intType = int
 	stringBytes = lambda x: bytes(x.encode('utf8'))
 else:
-	intType = long
 	stringBytes = lambda x: bytes(x)
 
 class BinsonException(Exception):
@@ -99,10 +99,9 @@ class BinsonParser:
 			if self.rawBytes[self.offset] == 0x43:
 				self.offset += 1
 				return listVal
-			try:
-				valueParser = self.valueParsers[self.rawBytes[self.offset]]
-			except:
+			if not self.rawBytes[self.offset] in self.valueParsers:
 				raise BinsonException('Unsupported type (0x%02x) at offset %d.' % (self.rawBytes[self.offset], self.offset))
+			valueParser = self.valueParsers[self.rawBytes[self.offset]]
 			listVal.append(valueParser[0](self, *valueParser[1]))
 
 	def __parseBool(self):
@@ -122,7 +121,7 @@ class BinsonParser:
 		if self.offset + lengthSize >= len(self.rawBytes):
 			raise BinsonException('Buffer to small to parse integer.')
 		intVal, = struct.unpack_from(unpack, self.rawBytes, self.offset)
-		intVal = intType(intVal)
+		intVal = int(intVal)
 		self.offset += lengthSize
 		return intVal
 
@@ -144,10 +143,24 @@ class BinsonParser:
 		0x20: (__parseBytes, (4, '<i'))
 	}
 
+
+class BinsonJSONEncoder(json.JSONEncoder):
+	def default(self, o):
+		if isinstance(o, Binson):
+			return o.dict
+		elif isinstance(o, bytearray):
+			ret = '0x'
+			for i in o:
+				ret += '%02x' % i
+			return ret
+		return json.JSONEncoder.default(self, o)
+
 class Binson():
 
-	def __init__(self, dict = {}):
-		self.dict = dict
+	def __init__(self, data=None):
+		self.dict = data
+		if data is None:
+			self.dict = {}
 
 	def __checkKeyAndTypeAndReturn(self, field, expectedType):
 		if not field in self.dict:
@@ -156,10 +169,25 @@ class Binson():
 			raise BinsonException('Field name "%s" does not contain expected field' % field)
 		return self.dict[field]
 
+	def toJSON(self):
+		return json.dumps(self.dict, cls=BinsonJSONEncoder, sort_keys=True, indent=4)
+
+	@staticmethod
+	def fromJSON(jsonStr):
+		# TODO: Convert dict to Binson
+		return Binson(json.loads(jsonStr))
+
+
 	def get(self, field):
 		if not field in self.dict:
 			raise BinsonException('Binson object does not contain field name "%s"' % field)
 		return self.dict[field]
+
+	def put(self, field, value):
+		if not isinstance(value, (int, six.string_types, bool, list, bytearray, Binson, float)):
+			raise BinsonException('Invalid data type.')
+		self.dict[field] = value
+		return self
 
 	def keys(self):
 		return self.dict.keys()
@@ -174,7 +202,7 @@ class Binson():
 		return self.__checkKeyAndTypeAndReturn(field, bool)
 
 	def getInteger(self, field):
-		return self.__checkKeyAndTypeAndReturn(field, intType)
+		return self.__checkKeyAndTypeAndReturn(field, int)
 
 	def getArray(self, field):
 		return self.__checkKeyAndTypeAndReturn(field, list)
@@ -202,59 +230,54 @@ class BinsonWriter:
 		return self.__writeObj(self.obj)
 
 	def __writeObj(self, obj):
-		rawBytes = bytearray()
-		rawBytes.append(0x40)
+		rawBytes = bytearray(b'\x40')
 		for key in sorted(obj.keys()):
 			rawBytes += self.__writeString(key)
-			valueType = obj.get(key).__class__.__name__
-			if not valueType in self.valueWriters:
-				raise BinsonException('Cannot write type %s into a binson object.' % valueType)
-			rawBytes += self.valueWriters[valueType](self, obj.get(key))
-		rawBytes.append(0x41)
+			val = obj.get(key)
+			rawBytes += self.getWriter(val)(val)
+		rawBytes += b'\x41'
 		return rawBytes
 
 	def __writeInt(self, intVal):
 		packVal = '<b'
-		typeVal = 0x10
+		typeVal = b'\x10'
 		if intVal < -(2**7) or intVal > (2**7 - 1):
 			packVal = '<h'
-			typeVal = 0x11
+			typeVal = b'\x11'
 		if intVal < -(2**15) or intVal > (2**15 - 1):
 			packVal = '<i'
-			typeVal = 0x12
+			typeVal = b'\x12'
 		if intVal < -(2**31) or intVal > (2**31 - 1):
 			packVal = '<q'
-			typeVal = 0x13
-		rawBytes = bytearray()
-		rawBytes.append(typeVal)
-		intBytes = struct.pack(packVal, intVal)
-		rawBytes += intBytes
+			typeVal = b'\x13'
+		rawBytes = bytearray(typeVal)
+		rawBytes += struct.pack(packVal, intVal)
 		return rawBytes
 	def __writeBytes(self, bytesVal):
 		rawBytes = bytearray()
-		typeVal = 0x18
+		typeVal = b'\x18'
 		packVal = '<b'
 		if len(bytesVal) > 2**7 - 1:
-			typeVal = 0x19
+			typeVal = b'\x19'
 			packVal = '<h'
 		if len(bytesVal) > 2**15 - 1:
-			typeVal = 0x1a
+			typeVal = b'\x20'
 			packVal = '<i'
-		rawBytes.append(typeVal)
+		rawBytes += typeVal
 		rawBytes += struct.pack(packVal, len(bytesVal))
 		rawBytes += bytesVal
 		return rawBytes
 	def __writeString(self, stringVal):
 		rawBytes = bytearray()
-		typeVal = 0x14
+		typeVal = b'\x14'
 		packVal = '<b'
 		if len(stringVal) > 2**7 - 1:
-			typeVal = 0x15
+			typeVal = b'\x15'
 			packVal = '<h'
 		if len(stringVal) > 2**15 - 1:
-			typeVal = 0x16
+			typeVal = b'\x16'
 			packVal = '<i'
-		rawBytes.append(typeVal)
+		rawBytes += typeVal
 		rawBytes += struct.pack(packVal, len(stringVal))
 		rawBytes += stringBytes(stringVal)
 		return rawBytes
@@ -262,26 +285,27 @@ class BinsonWriter:
 		return BinsonWriter(objVal).toBytes()
 	def __writeBool(self, boolVal):
 		if boolVal:
-			return bytearray([0x44])
-		return bytearray([0x45])
+			return b'\x44'
+		return b'\x45'
 	def __writeList(self, listVal):
-		rawBytes = bytearray()
-		rawBytes.append(0x42)
+		rawBytes = bytearray(b'\x42')
 		for val in listVal:
-			valueType = val.__class__.__name__
-			if not valueType in self.valueWriters:
-				raise BinsonException('Cannot write type %s into a binson object.' % valueType)
-			rawBytes += self.valueWriters[valueType](self, val)
-		rawBytes.append(0x43)
+			rawBytes += self.getWriter(val)(val)
+		rawBytes += b'\x43'
 		return rawBytes
 
-	valueWriters = {
-		'long': __writeInt,
-		'int': __writeInt,
-		'bytearray': __writeBytes,
-		'unicode': __writeString,
-		'str': __writeString,
-		'Binson': __writeObj,
-		'bool': __writeBool,
-		'list': __writeList
-	}
+	def getWriter(self, val):
+		if isinstance(val, bool):
+			return self.__writeBool
+		elif isinstance(val, int):
+			return self.__writeInt
+		elif isinstance(val, bytearray):
+			return self.__writeBytes
+		elif isinstance(val, six.string_types):
+			return self.__writeString
+		elif isinstance(val, Binson):
+			return self.__writeBinson
+		elif isinstance(val, list):
+			return self.__writeList
+		else:
+			raise BinsonException('Cannot write type %s into a binson object.' % val.__class__.__name__)
