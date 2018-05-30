@@ -125,7 +125,7 @@ class BinsonParser:
 		self.offset += 1
 		if self.offset + 8 >= len(self.rawBytes):
 			raise BinsonException('Buffer to small to parse float.')
-		floatVal = struct.unpack_from('<d', self.rawBytes, self.offset)
+		floatVal, = struct.unpack_from('<d', self.rawBytes, self.offset)
 		self.offset += 8
 		return floatVal
 
@@ -176,11 +176,6 @@ class Binson():
 		self.dict = data
 		if data is None:
 			self.dict = {}
-		else:
-			# Recursive convert dict values into Binson objects
-			for key, val in self.dict.items():
-				if isinstance(val, dict):
-					self.dict[key] = Binson(val)
 
 	def __checkKeyAndTypeAndReturn(self, field, expectedType):
 		if not field in self.dict:
@@ -195,7 +190,7 @@ class Binson():
 	@staticmethod
 	def fromJSON(jsonStr):
 		dictVal = json.loads(jsonStr)
-		return Binson(dictVal)
+		return Binson.fromBytes(Binson(dictVal).toBytes())
 
 
 	def get(self, field):
@@ -314,6 +309,14 @@ class BinsonWriter:
 		rawBytes += b'\x43'
 		return rawBytes
 
+	def __writeDict(self, dictVal):
+		return Binson(dictVal).toBytes()
+
+	def __writeFloat(self, floatVal):
+		rawBytes = bytearray(b'\x46')
+		rawBytes += struct.pack('<d', floatVal)
+		return rawBytes
+
 	def getWriter(self, val):
 		if isinstance(val, bool):
 			return self.__writeBool
@@ -327,5 +330,9 @@ class BinsonWriter:
 			return self.__writeBinson
 		elif isinstance(val, list):
 			return self.__writeList
+		elif isinstance(val, dict):
+			return self.__writeDict
+		elif isinstance(val, float):
+			return self.__writeFloat
 		else:
 			raise BinsonException('Cannot write type %s into a binson object.' % val.__class__.__name__)

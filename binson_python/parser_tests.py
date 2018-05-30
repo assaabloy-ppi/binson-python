@@ -159,6 +159,46 @@ class TestParser(unittest.TestCase):
 		self.assertEqual(b.toBytes(), rawBytes)
 		self.assertEqual(Binson.fromJSON('{"A":{"A":{"A":"B"}}}').toBytes(), rawBytes)
 
+		obj = Binson.fromJSON('''
+			{
+			"country abbreviation": "US",
+			"places": [
+			    {
+			        "place name": "Belmont",
+			        "longitude": -71.4594,
+			        "post code": "02178",
+			        "latitude": 42.4464
+			    },
+			    {
+			        "place name": "Belmont",
+			        "longitude": 71.2044,
+			        "post code": "02478",
+			        "latitude": -42.4128
+			    }
+			],
+			"country": "United States",
+			"place name": "Belmont",
+			"state": "Massachusetts",
+			"state abbreviation": "MA"
+			}
+		''')
+		self.assertEqual('US', obj.getString('country abbreviation'))
+		self.assertTrue(isinstance(obj.getArray('places'), list))
+		self.assertTrue(isinstance(obj.getArray('places')[0], Binson))
+		self.assertEqual('Belmont', obj.getArray("places")[0].getString('place name'))
+		self.assertEqual(-71.4594, obj.getArray("places")[0].getFloat('longitude'))
+		self.assertEqual('02178', obj.getArray("places")[0].getString('post code'))
+		self.assertEqual(42.4464, obj.getArray("places")[0].getFloat('latitude'))
+		self.assertTrue(isinstance(obj.getArray('places')[1], Binson))
+		self.assertEqual('Belmont', obj.getArray("places")[1].getString('place name'))
+		self.assertEqual(71.2044, obj.getArray("places")[1].getFloat('longitude'))
+		self.assertEqual('02478', obj.getArray("places")[1].getString('post code'))
+		self.assertEqual(-42.4128, obj.getArray("places")[1].getFloat('latitude'))
+		self.assertEqual('United States', obj.getString('country'))
+		self.assertEqual('Belmont', obj.getString('place name'))
+		self.assertEqual('Massachusetts', obj.getString('state'))
+		self.assertEqual('MA', obj.getString('state abbreviation'))
+
 
 	def test_bool(self):
 		rawBytes = bytearray([
