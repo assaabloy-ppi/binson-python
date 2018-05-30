@@ -196,6 +196,15 @@ class TestParser(unittest.TestCase):
 		self.assertEqual(2**15 - 1, obj.getInteger('D'))
 		self.assertEqual(obj.toBytes(), rawBytes)
 
+		badLengthInteger = bytearray([
+			0x40,
+			0x14, 0x01, 0x41, 0x11, 0x7F, 0x00,	# "A": 127
+			0x41
+		])
+
+		obj = Binson().fromBytes(rawBytes)
+		self.assertRaises(BinsonException, Binson().fromBytes, badLengthInteger)
+
 	def test_integer32(self):
 		rawBytes = bytearray([
 			0x40,

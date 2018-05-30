@@ -78,6 +78,17 @@ class BinsonParser:
 		except:
 			raise BinsonException('Invalid utf8 byte stream.')
 
+	def __validateStorageFormat(self, lengthSize, value):
+		if lengthSize == 1:
+			return -2**7 <= value <= (2**7 - 1)
+		elif lengthSize == 2:
+			return value < -2**7 or value > (2**7 - 1)
+		elif lengthSize == 4:
+			return value < -2**15 or value > (2**15 - 1)
+		elif lengthSize == 8:
+			return value < -2**31 or value > (2**31 - 1)
+		return False
+
 	def __parseBytes(self, lengthSize, unpack):
 		self.offset += 1
 		if self.offset + lengthSize >= len(self.rawBytes):
@@ -85,6 +96,8 @@ class BinsonParser:
 		bytesLen, = struct.unpack_from(unpack, self.rawBytes, self.offset)
 		if bytesLen <= 0:
 			raise BinsonException('Bad length (%d)' % bytesLen)
+		if not self.__validateStorageFormat(lengthSize, bytesLen):
+			raise BinsonException('Length field must use smallest size possible.')
 		self.offset += lengthSize
 		if self.offset + bytesLen >= len(self.rawBytes):
 			raise BinsonException('Buffer to small to parse bytes.')
@@ -121,6 +134,8 @@ class BinsonParser:
 		if self.offset + lengthSize >= len(self.rawBytes):
 			raise BinsonException('Buffer to small to parse integer.')
 		intVal, = struct.unpack_from(unpack, self.rawBytes, self.offset)
+		if not self.__validateStorageFormat(lengthSize, intVal):
+			raise BinsonException('Length field must use smallest size possible.')
 		intVal = int(intVal)
 		self.offset += lengthSize
 		return intVal
