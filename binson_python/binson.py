@@ -176,6 +176,11 @@ class Binson():
 		self.dict = data
 		if data is None:
 			self.dict = {}
+		else:
+			# Recursive convert dict values into Binson objects
+			for key, val in self.dict.items():
+				if isinstance(val, dict):
+					self.dict[key] = Binson(val)
 
 	def __checkKeyAndTypeAndReturn(self, field, expectedType):
 		if not field in self.dict:
@@ -189,8 +194,8 @@ class Binson():
 
 	@staticmethod
 	def fromJSON(jsonStr):
-		# TODO: Convert dict to Binson
-		return Binson(json.loads(jsonStr))
+		dictVal = json.loads(jsonStr)
+		return Binson(dictVal)
 
 
 	def get(self, field):

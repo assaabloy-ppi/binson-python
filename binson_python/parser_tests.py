@@ -139,6 +139,27 @@ class TestParser(unittest.TestCase):
 		self.assertEqual(b.toBytes(), rawBytes)
 		self.assertEqual(Binson.fromJSON('{"A":{"A":"B"}}').toBytes(), rawBytes)
 
+		rawBytes = bytearray([
+			0x40,
+				0x14, 0x01, 0x41,	# A
+				0x40,
+					0x14, 0x01, 0x41,	# A
+					0x40,
+						0x14, 0x01, 0x41,	# A
+						0x14, 0x01, 0x42,	# B
+					0x41,
+				0x41,
+			0x41
+		])
+		obj = Binson().fromBytes(rawBytes)
+		self.assertRaises(BinsonException, obj.getString, 'A')
+		self.assertEqual('B', obj.getObject('A').getObject('A').getString('A'))
+		self.assertEqual(obj.toBytes(), rawBytes)
+		b = Binson().put('A', Binson().put('A', Binson().put('A', 'B')))
+		self.assertEqual(b.toBytes(), rawBytes)
+		self.assertEqual(Binson.fromJSON('{"A":{"A":{"A":"B"}}}').toBytes(), rawBytes)
+
+
 	def test_bool(self):
 		rawBytes = bytearray([
 			0x40,
