@@ -344,6 +344,17 @@ class TestParser(unittest.TestCase):
 			0x36, 0x16, 0x8b, 0x41
 		])
 		obj = Binson().fromBytes(rawBytes)
+
+
+	def create_nested(self, level, maxDepth = 10):
+		if level == maxDepth:
+			return 'B'
+		return Binson().put('A', self.create_nested(level + 1, maxDepth)).put('B', level)
+
+	def test_many_nested(self):
+		obj = Binson()
+		obj.put('A', self.create_nested(0, 10))
+
 			
 
 if __name__ == '__main__':
