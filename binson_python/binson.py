@@ -170,6 +170,20 @@ class BinsonJSONEncoder(json.JSONEncoder):
 			return ret
 		return json.JSONEncoder.default(self, o)
 
+class BinsonJSONDecoder(json.JSONDecoder):
+	def __init__(self, *args, **kwargs):
+		json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+	def object_hook(self, o):
+		print(o)
+		for field in o:
+			if isinstance(o[field], six.string_types) and len(o[field]) > 4:
+				try:
+					tmp = bytearray.fromhex(o[field][2:])
+					o[field] = tmp
+				except:
+					pass
+		return o
+
 class Binson():
 
 	def __init__(self, data=None):
@@ -189,7 +203,7 @@ class Binson():
 
 	@staticmethod
 	def fromJSON(jsonStr):
-		dictVal = json.loads(jsonStr)
+		dictVal = json.loads(jsonStr, cls=BinsonJSONDecoder)
 		return Binson.fromBytes(Binson(dictVal).toBytes())
 
 
