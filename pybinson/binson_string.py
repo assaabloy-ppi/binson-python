@@ -12,20 +12,17 @@ class BinsonString(BinsonValue):
     Dummy
     """
 
-    IDENTIFIERS = [0x14, 0x15, 0x16]
-    INSTANCE_TYPES = (six.string_types)
-
     @staticmethod
     def instances():
-        return BinsonString.INSTANCE_TYPES
+        return six.string_types
 
     @staticmethod
     def identifiers():
-        return BinsonString.IDENTIFIERS
+        return [0x14, 0x15, 0x16]
 
     @staticmethod
     def from_bytes(bytes_rep, offset=0):
-        if not bytes_rep[offset] in BinsonString.IDENTIFIERS:
+        if not bytes_rep[offset] in BinsonString.identifiers():
             error_msg = 'Expected string length identifier'
             error_msg += ' (0x14, 0x15, 0x16)'
             error_msg += ' but got {}'.format(bytes_rep[offset])

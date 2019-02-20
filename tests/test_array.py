@@ -1,7 +1,8 @@
 import unittest
 
+from pybinson.binson import BinsonException
 from pybinson.binson_array import BinsonArray
-from pybinson.binson_exception import BinsonException
+
 
 class TestBinsonArray(unittest.TestCase):
 

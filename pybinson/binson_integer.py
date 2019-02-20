@@ -19,9 +19,6 @@ class BinsonInteger(BinsonValue):
         0x13: '<q'
     }
 
-    IDENTIFIERS = [0x10, 0x11, 0x12, 0x13]
-    INSTANCE_TYPES = (int)
-
     SIZE_IDENTIFIERS = {
         1: 0x10,
         2: 0x11,
@@ -31,11 +28,11 @@ class BinsonInteger(BinsonValue):
 
     @staticmethod
     def instances():
-        return BinsonInteger.INSTANCE_TYPES
+        return int
 
     @staticmethod
     def identifiers():
-        return BinsonInteger.IDENTIFIERS
+        return [0x10, 0x11, 0x12, 0x13]
 
     @staticmethod
     def int_size(int_val):

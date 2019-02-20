@@ -62,6 +62,8 @@ class TestBinsonSanity(unittest.TestCase):
         self.sanity_helper(obj3)
         self.assertTrue(obj == obj2)
         self.assertTrue(obj2 == obj3)
+        self.assertFalse(obj2 == 23)
+        self.assertTrue(obj2 != 23)
         obj4 = Binson.from_json('''
         {
             "A": 1,

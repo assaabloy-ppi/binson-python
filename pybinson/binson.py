@@ -1,90 +1,164 @@
 """
 Dummy
 """
+import json
 
+import pybinson
+from pybinson.binson_object import BinsonObject
+from pybinson.binson_array import BinsonArray
+from pybinson.binson_bool import BinsonBool
+from pybinson.binson_bytes import BinsonBytes
 from pybinson.binson_exception import BinsonException
+from pybinson.binson_float import BinsonFloat
+from pybinson.binson_integer import BinsonInteger
 from pybinson.binson_string import BinsonString
-from pybinson.binson_interface import BinsonInterface
 
 
-class Binson(BinsonInterface):
+class Binson(BinsonObject):
     """
     Dummy
     """
 
+    def __init__(self, dict_val=None):
+        if not dict_val:
+            dict_val = {}
+        super(Binson, self).__init__(dict_val)
+
     @staticmethod
-    def from_bytes(bytes_rep, offset=0):
-        from pybinson.binson_values import get_parser
-        if not offset < len(bytes_rep):
-            error_msg = 'Byte array too small to hold a binson object.'
-            raise BinsonException(error_msg)
-        orig_offset = offset
-        if not bytes_rep[offset] in Binson.identifiers():
-            raise BinsonException('Unexpected start of binson object.')
-        offset += 1
-        dict_rep = {}
-        prev_name = ''
-        length = len(bytes_rep)
-        while offset < length:
-
-            # End of object
-            if bytes_rep[offset] == 0x41:
-                offset += 1
-                consumed = offset - orig_offset
-                return Binson(dict_rep), consumed
-
-            # Parse field name (BinsonString)
-            name, consumed = BinsonString.from_bytes(bytes_rep, offset)
-            name = name.get_value()
-            offset += consumed
-
-            if name <= prev_name:
-                error_msg = 'Fields names not in lexicographical order'
-                error_msg += ' when parsing. Current: {}'.format(name)
-                error_msg += ', previous: {}'.format(prev_name)
+    def deserialize(bytes_rep, offset=0, check_trailing_garbage=True):
+        """
+        :param bytes_rep:
+        :param offset:
+        :param check_trailing_garbage:
+        :return:
+        """
+        binson, consumed = pybinson.binson.Binson.from_bytes(bytes_rep, offset)
+        if check_trailing_garbage:
+            if not offset + consumed == len(bytes_rep):
+                error_msg = 'Detected garbage after object end.'
                 raise BinsonException(error_msg)
+        return binson
 
-            identifier = bytes_rep[offset]
-            parser = get_parser(identifier)
-            binson_value, consumed = parser(bytes_rep, offset)
-            offset += consumed
-            dict_rep[name] = binson_value
-            prev_name = name
-
-        # We should never end ep here if it is a valid binson object
-        raise BinsonException('Unexpected end of byte array')
-
-    @staticmethod
-    def identifiers():
-        return [0x40]
-
-    @staticmethod
-    def instances():
-        return dict
-
-    def __init__(self, dict_rep=None):
-        from pybinson.binson_values import binsonify_dict
-        if not dict_rep:
-            dict_rep = {}
-        # Convert native types to BinsonValue representation
-        binsonify_dict(dict_rep)
-        super(Binson, self).__init__(dict_rep)
-
-    def __eq__(self, other):
-        if isinstance(other, Binson):
-            return self.serialize() == other.serialize()
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def serialize(self):
+    def keys(self):
         """
         :return:
         """
-        bytes_rep = bytearray(b'\x40')
-        for field in sorted(self.value.keys()):
-            bytes_rep += BinsonString(field).serialize()
-            bytes_rep += self.value[field].serialize()
-        bytes_rep += bytearray(b'\x41')
-        return bytes_rep
+        return self.value.keys()
+
+    def put(self, field_name, value):
+        """
+        :param field_name:
+        :param value:
+        :return:
+        """
+        self.value[field_name] = pybinson.binson_values.binsonify_value(value)
+        return self
+
+    def __get(self, field, expected_type):
+        """
+        :param field:
+        :param expected_type:
+        :return:
+        """
+        if field not in self.value:
+            raise BinsonException(
+                'Binson object does not contain field name "%s"' % field)
+        value = self.value[field]
+        if not isinstance(value, expected_type):
+            raise BinsonException(
+                'Field name "%s" does not contain expected field' % field)
+        if not isinstance(value, (BinsonArray, BinsonObject)):
+            value = value.get_value()
+        return value
+
+    def get_integer(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, BinsonInteger)
+
+    def get_float(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, BinsonFloat)
+
+    def get_string(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, BinsonString)
+
+    def get_bytes(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, BinsonBytes)
+
+    def get_bool(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, BinsonBool)
+
+    def get_array(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, BinsonArray)
+
+    def get_object(self, field_name):
+        """
+        :param field_name:
+        :return:
+        """
+        return self.__get(field_name, pybinson.binson.Binson)
+
+    def to_json(self, indent=4):
+        """
+        :param indent:
+        :return:
+        """
+        def jsonify_binson(value):
+            """
+            :param value:
+            :return:
+            """
+            if isinstance(value, BinsonBytes):
+                ret = '0x'
+                for i in value.get_value():
+                    ret += '%02x' % i
+                return ret
+            return value.get_value()
+        return json.dumps(self.value, default=jsonify_binson, indent=indent)
+
+    @staticmethod
+    def from_json(json_str):
+        """
+        :param json_str:
+        :return:
+        """
+        def binsonify_json(obj):
+            """
+            :param obj:
+            :return:
+            """
+            import six
+            for field in obj:
+                value = obj[field]
+                if isinstance(value, six.string_types) and len(value) > 4:
+                    if value[0:2].upper() == '0X':
+                        try:
+                            tmp = bytearray.fromhex(value[2:])
+                            obj[field] = tmp
+                        except ValueError:
+                            pass
+            return obj
+        dict_rep = json.loads(json_str, object_hook=binsonify_json)
+        return pybinson.binson.Binson(dict_rep)

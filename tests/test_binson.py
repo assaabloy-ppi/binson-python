@@ -41,6 +41,8 @@ class TestBinson(unittest.TestCase):
         self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
         raw_bytes = bytearray(b'\x40\x41\x09')
         self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+        raw_bytes = bytearray(b'\x40\x14\x01\x41')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
 
     def test_empty_object(self):
         obj = Binson.deserialize(bytearray([0x40, 0x41]))
@@ -118,6 +120,9 @@ class TestBinson(unittest.TestCase):
         b = Binson().put('A', 'C').put('B', 'D')
         self.assertEqual(b.serialize(), raw_bytes)
         self.assertEqual(Binson.from_json('{"A":"C","B":"D"}').serialize(), raw_bytes)
+
+    def test_not_bytearray_in_json(self):
+        Binson.from_json('{"a":"0xkalle"}')
 
     def test_duplicate(self):
 

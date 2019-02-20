@@ -47,16 +47,13 @@ class BinsonBytes(BinsonValue):
     Dummy
     """
 
-    IDENTIFIERS = [0x18, 0x19, 0x1a]
-    INSTANCE_TYPES = (bytearray)
-
     @staticmethod
     def instances():
-        return BinsonBytes.INSTANCE_TYPES
+        return bytearray
 
     @staticmethod
     def identifiers():
-        return BinsonBytes.IDENTIFIERS
+        return [0x18, 0x19, 0x1a]
 
     @staticmethod
     def from_bytes(bytes_rep, offset=0):

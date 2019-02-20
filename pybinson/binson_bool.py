@@ -10,16 +10,13 @@ class BinsonBool(BinsonValue):
     Dummy
     """
 
-    IDENTIFIERS = [0x44, 0x45]
-    INSTANCE_TYPES = (bool)
-
     @staticmethod
     def instances():
-        return BinsonBool.INSTANCE_TYPES
+        return bool
 
     @staticmethod
     def identifiers():
-        return BinsonBool.IDENTIFIERS
+        return [0x44, 0x45]
 
     @staticmethod
     def from_bytes(bytes_rep, offset=0):

@@ -11,11 +11,9 @@ class BinsonArray(BinsonValue, BinsonArrayInterface):
     Dummy
     """
 
-    INSTANCE_TYPES = (list)
-
     @staticmethod
     def instances():
-        return BinsonArray.INSTANCE_TYPES
+        return list
 
     @staticmethod
     def identifiers():

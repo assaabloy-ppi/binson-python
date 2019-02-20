@@ -2,6 +2,7 @@
 Dummy
 """
 import pybinson
+from pybinson.binson_object import BinsonObject
 from pybinson.binson_value import BinsonValue
 
 
@@ -39,7 +40,7 @@ class BinsonArrayInterface(object):
         assert index < len(self.value)
         ret_val = self.value[index]
         self_instances = (pybinson.binson_array.BinsonArray,
-                          pybinson.binson.Binson)
+                          BinsonObject)
         if not isinstance(ret_val, self_instances):
             ret_val = ret_val.value
         return ret_val

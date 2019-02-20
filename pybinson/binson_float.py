@@ -12,16 +12,13 @@ class BinsonFloat(BinsonValue):
     Dummy
     """
 
-    IDENTIFIERS = [0x46]
-    INSTANCE_TYPES = (float)
-
     @staticmethod
     def instances():
-        return BinsonFloat.INSTANCE_TYPES
+        return float
 
     @staticmethod
     def identifiers():
-        return BinsonFloat.IDENTIFIERS
+        return [0x46]
 
     @staticmethod
     def from_bytes(bytes_rep, offset=0):
