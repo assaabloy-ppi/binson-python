@@ -1,5 +1,6 @@
 import unittest
 
+from pybinson.binson_exception import BinsonException
 from pybinson.binson_integer import BinsonInteger
 
 class TestBinsonInteger(unittest.TestCase):
@@ -40,6 +41,8 @@ class TestBinsonInteger(unittest.TestCase):
         self.assertEqual(BinsonInteger.int_size(-2**31 - 1), 8)
         self.assertEqual(BinsonInteger.int_size(2**63 - 2), 8)
         self.assertEqual(BinsonInteger.int_size(2**63 - 1), 8)
+
+        self.assertRaises(BinsonException, BinsonInteger.int_size, 2**63 + 1)
 
     def test_integers_8(self):
 

@@ -29,6 +29,19 @@ class TestBinson(unittest.TestCase):
         ])
         self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
 
+        raw_bytes = bytearray(b'\x40\x14\x01\x41\x09\x41')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+        raw_bytes = bytearray(b'\x40\x09\x41')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+        raw_bytes = bytearray(b'\x40\x14\x08\x41\x41')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+        raw_bytes = bytearray(b'\x40\x14\x01\x41\x46\x41')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+        raw_bytes = bytearray(b'\x40\x14\x01\x41\x12\x41')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+        raw_bytes = bytearray(b'\x40\x41\x09')
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
+
     def test_empty_object(self):
         obj = Binson.deserialize(bytearray([0x40, 0x41]))
         for key in obj.keys():

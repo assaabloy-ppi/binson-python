@@ -18,6 +18,7 @@ class TestBinsonArray(unittest.TestCase):
         b.append(2)
         b.append(3)
         self.assertEqual(a.serialize(), b.serialize())
+        self.assertRaises(BinsonException, BinsonArray, 1)
 
     def test_no_end_array(self):
         bytes_rep = bytearray(b'\x42\x44\x45')

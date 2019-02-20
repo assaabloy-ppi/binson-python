@@ -2,6 +2,7 @@ import unittest
 
 from pybinson.binson_array import BinsonArray
 from pybinson.binson import Binson
+from pybinson.binson_value import BinsonValue
 
 
 class TestBinsonSanity(unittest.TestCase):
@@ -92,6 +93,13 @@ class TestBinsonSanity(unittest.TestCase):
         self.assertEqual(str1, str2)
         self.assertEqual(str2, str3)
         self.assertEqual(str3, str4)
+
+    def test_binson_value(self):
+        self.assertRaises(NotImplementedError, BinsonValue.instances)
+        self.assertRaises(NotImplementedError, BinsonValue.identifiers)
+        self.assertRaises(NotImplementedError, BinsonValue.from_bytes, bytearray(b'\x40'))
+        a = BinsonValue(1)
+        self.assertRaises(NotImplementedError, a.serialize)
 
 if __name__ == '__main__':
     unittest.main()
