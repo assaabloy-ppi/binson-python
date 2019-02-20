@@ -8,4 +8,4 @@ python:
 install:
   - pip install codecov coverage tox_travis
 script: tox
-after_success: coverage combine && codecov
+after_success: coverage report && codecov
