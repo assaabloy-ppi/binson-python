@@ -11,21 +11,28 @@ from pybinson.binson_exception import BinsonException
 from pybinson.binson_float import BinsonFloat
 from pybinson.binson_integer import BinsonInteger
 from pybinson.binson_string import BinsonString
+from pybinson.binson_value import BinsonValue
 
 
-class BinsonInterface(object):
+class BinsonInterface(BinsonValue):
     """
     Dummy
     """
-    def __init__(self):
-        self.value = None
 
-    def _set_dict(self, dict_val):
-        """
-        :param dict_val:
-        :return:
-        """
-        self.value = dict_val
+    @staticmethod
+    def from_bytes(bytes_rep, offset=0):
+        pass
+
+    @staticmethod
+    def identifiers():
+        pass
+
+    @staticmethod
+    def instances():
+        pass
+
+    def serialize(self):
+        pass
 
     @staticmethod
     def deserialize(bytes_rep, offset=0, check_trailing_garbage=True):

@@ -4,11 +4,10 @@ Dummy
 
 from pybinson.binson_exception import BinsonException
 from pybinson.binson_string import BinsonString
-from pybinson.binson_value import BinsonValue
 from pybinson.binson_interface import BinsonInterface
 
 
-class Binson(BinsonValue, BinsonInterface):
+class Binson(BinsonInterface):
     """
     Dummy
     """
@@ -67,10 +66,9 @@ class Binson(BinsonValue, BinsonInterface):
         from pybinson.binson_values import binsonify_dict
         if not dict_rep:
             dict_rep = {}
-        super(Binson, self).__init__(dict_rep)
         # Convert native types to BinsonValue representation
         binsonify_dict(dict_rep)
-        self._set_dict(self.value)
+        super(Binson, self).__init__(dict_rep)
 
     def __eq__(self, other):
         if isinstance(other, Binson):
