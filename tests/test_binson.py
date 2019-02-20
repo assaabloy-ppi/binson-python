@@ -9,16 +9,16 @@ class TestBinson(unittest.TestCase):
     def test_bad_input(self):
 
         # Empty byte array
-        self.assertRaises(BinsonException, Binson.from_bytes, bytearray([]))
+        self.assertRaises(BinsonException, Binson.deserialize, bytearray([]))
 
         # Length < 2 byte array
-        self.assertRaises(BinsonException, Binson.from_bytes, bytearray([0x01]))
+        self.assertRaises(BinsonException, Binson.deserialize, bytearray([0x01]))
 
         # Bad format of first and last byte
-        self.assertRaises(BinsonException, Binson.from_bytes, bytearray([0x01, 0x02]))
+        self.assertRaises(BinsonException, Binson.deserialize, bytearray([0x01, 0x02]))
 
         # Bad type string
-        self.assertRaises(BinsonException, Binson.from_bytes, 'binson')
+        self.assertRaises(BinsonException, Binson.deserialize, 'binson')
 
         # Bad string length
         raw_bytes = bytearray([
@@ -27,10 +27,10 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x43,	# C
             0x41
         ])
-        self.assertRaises(BinsonException, Binson.from_bytes, raw_bytes)
+        self.assertRaises(BinsonException, Binson.deserialize, raw_bytes)
 
     def test_empty_object(self):
-        obj = Binson.from_bytes(bytearray([0x40, 0x41]))
+        obj = Binson.deserialize(bytearray([0x40, 0x41]))
         for key in obj.keys():
             self.assertTrue(False)
         self.assertEqual(Binson().serialize(), bytearray([0x40, 0x41]))
@@ -45,7 +45,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x42,	# B
             0x41
         ])
-        obj = Binson().from_bytes(raw_bytes)
+        obj = Binson.deserialize(raw_bytes)
         self.assertEqual('B', obj.get_string('A'))
         self.assertRaises(BinsonException, obj.get_string, 'a')
         self.assertRaises(BinsonException, obj.get_string, 'B')
@@ -67,7 +67,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x43,	# C
             0x41
         ])
-        obj = Binson.from_bytes(raw_bytes)
+        obj = Binson.deserialize(raw_bytes)
         self.assertEqual('C', obj.get_string('A'))
         self.assertEqual(obj.serialize(), raw_bytes)
         self.assertEqual(Binson().put('A', 'C').serialize(), raw_bytes)
@@ -80,7 +80,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x03, 0x76, 0x61, 0x6c,			# val
             0x41
         ])
-        obj = Binson.from_bytes(raw_bytes)
+        obj = Binson.deserialize(raw_bytes)
         self.assertEqual('val', obj.get_string('name'))
         self.assertEqual(obj.serialize(), raw_bytes)
         b = Binson().put('name', 'val')
@@ -98,7 +98,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x44,	# D
             0x41
         ])
-        obj = Binson.from_bytes(raw_bytes)
+        obj = Binson.deserialize(raw_bytes)
         self.assertEqual('C', obj.get_string('A'))
         self.assertEqual('D', obj.get_string('B'))
         self.assertEqual(obj.serialize(), raw_bytes)
@@ -112,14 +112,14 @@ class TestBinson(unittest.TestCase):
         bad_binson = bytearray([
             0x40, 0x14, 0x01, 0x41, 0x14, 0x01, 0x42, 0x14, 0x01, 0x41, 0x14, 0x01, 0x43, 0x41
         ])
-        self.assertRaises(BinsonException, Binson.from_bytes, bad_binson)
+        self.assertRaises(BinsonException, Binson.deserialize, bad_binson)
 
     def test_not_sorted(self):
         # {A:"B", A:"C"}
         bad_binson = bytearray([
             0x40, 0x14, 0x01, 0x42, 0x14, 0x01, 0x42, 0x14, 0x01, 0x41, 0x14, 0x01, 0x43, 0x41
         ])
-        self.assertRaises(BinsonException, Binson.from_bytes, bad_binson)
+        self.assertRaises(BinsonException, Binson.deserialize, bad_binson)
 
     def test_nested_object(self):
         # {A:{A:"B"}}
@@ -132,7 +132,7 @@ class TestBinson(unittest.TestCase):
             0x41,
             0x41
         ])
-        obj = Binson.from_bytes(raw_bytes)
+        obj = Binson.deserialize(raw_bytes)
         self.assertRaises(BinsonException, obj.get_string, 'A')
         self.assertEqual('B', obj.get_object('A').get_string('A'))
         self.assertEqual(obj.serialize(), raw_bytes)
@@ -152,7 +152,7 @@ class TestBinson(unittest.TestCase):
             0x41,
             0x41
         ])
-        obj = Binson.from_bytes(raw_bytes)
+        obj = Binson.deserialize(raw_bytes)
         self.assertRaises(BinsonException, obj.get_string, 'A')
         self.assertEqual('B', obj.get_object('A').get_object('A').get_string('A'))
         self.assertEqual(obj.serialize(), raw_bytes)
@@ -211,7 +211,7 @@ class TestBinson(unittest.TestCase):
             0x45,				# False
             0x41
         ])
-        obj = Binson.from_bytes(rawBytes)
+        obj = Binson.deserialize(rawBytes)
         self.assertEqual(True, obj.get_bool('A'))
         self.assertEqual(False, obj.get_bool('B'))
         self.assertEqual(obj.serialize(), rawBytes)
@@ -228,7 +228,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x44, 0x10, 0x7F,	# "D": 127
             0x41
         ])
-        obj = Binson.from_bytes(rawBytes)
+        obj = Binson.deserialize(rawBytes)
 
         self.assertEqual(-2**7, obj.get_integer('A'))
         self.assertEqual(0, obj.get_integer('B'))
@@ -252,7 +252,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x44, 0x11, 0xFF, 0x7F,	# "D": 2^15 - 1
             0x41
         ])
-        obj = Binson.from_bytes(rawBytes)
+        obj = Binson.deserialize(rawBytes)
 
         self.assertEqual(-2**15, obj.get_integer('A'))
         self.assertEqual(-(2**7 + 1), obj.get_integer('B'))
@@ -266,8 +266,8 @@ class TestBinson(unittest.TestCase):
             0x41
         ])
 
-        obj = Binson.from_bytes(rawBytes)
-        self.assertRaises(BinsonException, Binson.from_bytes, badLengthInteger)
+        obj = Binson.deserialize(rawBytes)
+        self.assertRaises(BinsonException, Binson.deserialize, badLengthInteger)
 
     def test_integer32(self):
         rawBytes = bytearray([
@@ -278,7 +278,7 @@ class TestBinson(unittest.TestCase):
             0x14, 0x01, 0x44, 0x12, 0xFF, 0xFF, 0xFF, 0x7F,	# "D": 2^31 - 1
             0x41
         ])
-        obj = Binson.from_bytes(rawBytes)
+        obj = Binson.deserialize(rawBytes)
 
         self.assertEqual(-2**31, obj.get_integer('A'))
         self.assertEqual(-(2**15 + 1), obj.get_integer('B'))
@@ -318,7 +318,7 @@ class TestBinson(unittest.TestCase):
             0x62, 0x96, 0xf3, 0x73, 0x41, 0x3b, 0x37, 0x3d,
             0x36, 0x16, 0x8b, 0x41, 0x43, 0x41, 0x41,
         ])
-        obj = Binson().from_bytes(rawBytes)
+        obj = Binson.deserialize(rawBytes)
         self.assertEqual('login', obj.get_string('c'))
         self.assertEqual(10, obj.get_integer('i'))
         self.assertEqual('s', obj.get_string('o'))
@@ -346,8 +346,7 @@ class TestBinson(unittest.TestCase):
             0x62, 0x96, 0xf3, 0x73, 0x41, 0x3b, 0x37, 0x3d,
             0x36, 0x16, 0x8b, 0x41
         ])
-        obj = Binson().from_bytes(rawBytes)
-
+        obj = Binson.deserialize(rawBytes)
 
     def create_nested(self, level, maxDepth = 10):
         if level == maxDepth:

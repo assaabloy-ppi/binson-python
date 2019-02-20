@@ -27,6 +27,6 @@ class BinsonBool(BinsonValue):
         return BinsonBool(bool_val), 1
 
     def serialize(self):
-        if self.value:
+        if self.value is True:
             return bytearray(b'\x44')
         return bytearray(b'\x45')

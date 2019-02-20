@@ -27,6 +27,21 @@ class BinsonInterface(object):
         """
         self.value = dict_val
 
+    @staticmethod
+    def deserialize(bytes_rep, offset=0, check_trailing_garbage=True):
+        """
+        :param bytes_rep:
+        :param offset:
+        :param check_garbage:
+        :return:
+        """
+        binson, consumed = pybinson.binson.Binson.from_bytes(bytes_rep, offset)
+        if check_trailing_garbage:
+            if not offset + consumed == len(bytes_rep):
+                error_msg = 'Detected garbage after object end.'
+                raise BinsonException(error_msg)
+        return binson
+
     def keys(self):
         """
         :return:
@@ -36,6 +51,7 @@ class BinsonInterface(object):
     def put(self, field_name, value):
         """
         :param field_name:
+        :param value:
         :return:
         """
         self.value[field_name] = pybinson.binson_values.binsonify_value(value)

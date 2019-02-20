@@ -20,7 +20,7 @@ class Binson(BinsonValue, BinsonInterface):
             error_msg = 'Byte array too small to hold a binson object.'
             raise BinsonException(error_msg)
         orig_offset = offset
-        if offset == 0 and not bytes_rep[offset] in Binson.identifiers():
+        if not bytes_rep[offset] in Binson.identifiers():
             raise BinsonException('Unexpected start of binson object.')
         offset += 1
         dict_rep = {}
@@ -32,11 +32,6 @@ class Binson(BinsonValue, BinsonInterface):
             if bytes_rep[offset] == 0x41:
                 offset += 1
                 consumed = offset - orig_offset
-                if orig_offset == 0:
-                    if not consumed == length:
-                        error_msg = 'Detected garbage after object end.'
-                        raise BinsonException(error_msg)
-                    return Binson(dict_rep)
                 return Binson(dict_rep), consumed
 
             # Parse field name (BinsonString)

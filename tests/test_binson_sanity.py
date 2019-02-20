@@ -29,7 +29,7 @@ class TestBinsonSanity(unittest.TestCase):
         obj.put('D', False).put('E', bytearray(b'\x01\x02'))
         obj.put('F', [1,2,3]).put('G', BinsonArray().append(1).append(2).append(3))
         obj.put('H', {})
-        cpy = Binson.from_bytes(obj.serialize())
+        cpy = Binson.deserialize(obj.serialize())
         obj.put('I', cpy)
 
         obj2 = Binson({
@@ -56,7 +56,7 @@ class TestBinsonSanity(unittest.TestCase):
         self.sanity_helper(obj)
         self.sanity_helper(obj2)
 
-        obj3 = Binson.from_bytes(obj.serialize())
+        obj3 = Binson.deserialize(obj.serialize())
         obj3.put('I', cpy)
         self.sanity_helper(obj3)
         self.assertTrue(obj == obj2)
