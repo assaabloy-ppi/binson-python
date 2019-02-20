@@ -6,8 +6,6 @@ python:
   - "3.6"
   - "3.7"
 install:
-  - pip install codecov coverage
-  - python setup.py bdist_wheel
-  - pip install ./dist/tox_travis-*.whl
-script: tox --installpkg ./dist/tox_travis-*.whl
+  - pip install codecov coverage tox_travis
+script: tox
 after_success: coverage combine && codecov
