@@ -4,11 +4,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="sample-project",
+    name="binson-python",
     version="0.0.1",
     author="Simon Johansson",
-    author_email="sijohans@kth.se",
-    description="A small example package",
+    author_email="simon.johansson@assaabloy.com",
+    description="A python imlementation of Binson",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/sijohans/sample-project",
