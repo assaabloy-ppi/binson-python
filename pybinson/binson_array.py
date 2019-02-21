@@ -3,13 +3,59 @@ Dummy
 """
 from pybinson.binson_exception import BinsonException
 from pybinson.binson_value import BinsonValue
-from pybinson.array_interface import BinsonArrayInterface
 
 
-class BinsonArray(BinsonValue, BinsonArrayInterface):
+class BinsonArray(BinsonValue):
     """
     Dummy
     """
+
+    def __init__(self, array=None):
+        from pybinson.binson_values import binsonify_value
+        if not array:
+            array = []
+        if not isinstance(array, list):
+            error_msg = 'Value of type {}'.format(type(array))
+            error_msg += ' cannot be represented as binson.'
+            raise BinsonException(error_msg)
+        super(BinsonArray, self).__init__(array)
+        for i in range(0, len(self.value)):
+            self.value[i] = binsonify_value(self.value[i])
+
+    def serialize(self):
+        """
+        :return:
+        """
+        bytes_rep = bytearray(b'\x42')
+        for value in self.value:
+            bytes_rep += value.serialize()
+        bytes_rep += bytearray(b'\x43')
+        return bytes_rep
+
+    def append(self, value):
+        """
+        :param value:
+        :return:
+        """
+        from pybinson import binson_values
+        if not isinstance(value, BinsonValue):
+            value = binson_values.binsonify_value(value)
+        self.value.append(value)
+        return self
+
+    def get(self, index):
+        """
+        :param index:
+        :return:
+        """
+        assert index < len(self.value)
+        ret_val = self.value[index]
+        from pybinson.binson_object import BinsonObject
+        self_instances = (BinsonArray,
+                          BinsonObject)
+        if not isinstance(ret_val, self_instances):
+            ret_val = ret_val.value
+        return ret_val
 
     @staticmethod
     def instances():
@@ -40,26 +86,3 @@ class BinsonArray(BinsonValue, BinsonArrayInterface):
             offset += consumed
 
         raise BinsonException('Unexpected end of byte array')
-
-    def __init__(self, array=None):
-        from pybinson.binson_values import binsonify_value
-        if not array:
-            array = []
-        if not isinstance(array, list):
-            error_msg = 'Value of type {}'.format(type(array))
-            error_msg += ' cannot be represented as binson.'
-            raise BinsonException(error_msg)
-        super(BinsonArray, self).__init__(array)
-        for i in range(0, len(self.value)):
-            self.value[i] = binsonify_value(self.value[i])
-        self._set_list(self.value)
-
-    def serialize(self):
-        """
-        :return:
-        """
-        bytes_rep = bytearray(b'\x42')
-        for value in self.value:
-            bytes_rep += value.serialize()
-        bytes_rep += bytearray(b'\x43')
-        return bytes_rep

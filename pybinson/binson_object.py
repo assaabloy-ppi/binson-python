@@ -12,6 +12,33 @@ class BinsonObject(BinsonValue):
     Dummy
     """
 
+    def __init__(self, dict_rep=None):
+        from pybinson.binson_values import binsonify_dict
+        if not dict_rep:
+            dict_rep = {}
+        # Convert native types to BinsonValue representation
+        binsonify_dict(dict_rep)
+        super(BinsonObject, self).__init__(dict_rep)
+
+    def __eq__(self, other):
+        if isinstance(other, BinsonObject):
+            return self.serialize() == other.serialize()
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def serialize(self):
+        """
+        :return:
+        """
+        bytes_rep = bytearray(b'\x40')
+        for field in sorted(self.value.keys()):
+            bytes_rep += BinsonString(field).serialize()
+            bytes_rep += self.value[field].serialize()
+        bytes_rep += bytearray(b'\x41')
+        return bytes_rep
+
     @staticmethod
     def from_bytes(bytes_rep, offset=0):
         from pybinson.binson_values import get_parser
@@ -64,30 +91,3 @@ class BinsonObject(BinsonValue):
     @staticmethod
     def instances():
         return dict
-
-    def __init__(self, dict_rep=None):
-        from pybinson.binson_values import binsonify_dict
-        if not dict_rep:
-            dict_rep = {}
-        # Convert native types to BinsonValue representation
-        binsonify_dict(dict_rep)
-        super(BinsonObject, self).__init__(dict_rep)
-
-    def __eq__(self, other):
-        if isinstance(other, BinsonObject):
-            return self.serialize() == other.serialize()
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def serialize(self):
-        """
-        :return:
-        """
-        bytes_rep = bytearray(b'\x40')
-        for field in sorted(self.value.keys()):
-            bytes_rep += BinsonString(field).serialize()
-            bytes_rep += self.value[field].serialize()
-        bytes_rep += bytearray(b'\x41')
-        return bytes_rep

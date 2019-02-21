@@ -26,6 +26,16 @@ class BinsonInteger(BinsonValue):
         8: 0x13
     }
 
+    def serialize(self):
+        value = self.value
+        size = BinsonInteger.int_size(value)
+        identifier = BinsonInteger.SIZE_IDENTIFIERS[size]
+        pack_val = BinsonInteger.UNPACK_VALUES[identifier]
+        raw_bytes = bytearray(1 + (1 << (identifier & 0x0F)))
+        raw_bytes[0] = identifier
+        struct.pack_into(pack_val, raw_bytes, 1, value)
+        return raw_bytes
+
     @staticmethod
     def instances():
         return int
@@ -78,13 +88,3 @@ class BinsonInteger(BinsonValue):
     def from_bytes(bytes_rep, offset=0):
         return BinsonInteger.from_bytes_with_identifier(
             bytes_rep, offset, bytes_rep[offset])
-
-    def serialize(self):
-        value = self.value
-        size = BinsonInteger.int_size(value)
-        identifier = BinsonInteger.SIZE_IDENTIFIERS[size]
-        pack_val = BinsonInteger.UNPACK_VALUES[identifier]
-        raw_bytes = bytearray(1 + (1 << (identifier & 0x0F)))
-        raw_bytes[0] = identifier
-        struct.pack_into(pack_val, raw_bytes, 1, value)
-        return raw_bytes

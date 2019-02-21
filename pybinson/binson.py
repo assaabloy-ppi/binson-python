@@ -32,7 +32,7 @@ class Binson(BinsonObject):
         :param check_trailing_garbage:
         :return:
         """
-        binson, consumed = pybinson.binson.Binson.from_bytes(bytes_rep, offset)
+        binson, consumed = Binson.from_bytes(bytes_rep, offset)
         if check_trailing_garbage:
             if not offset + consumed == len(bytes_rep):
                 error_msg = 'Detected garbage after object end.'

@@ -47,6 +47,9 @@ class BinsonBytes(BinsonValue):
     Dummy
     """
 
+    def serialize(self):
+        return to_bytes(self.value)
+
     @staticmethod
     def instances():
         return bytearray
@@ -60,6 +63,3 @@ class BinsonBytes(BinsonValue):
         bytes_val, consumed = from_bytes_with_identifier(
             bytes_rep, offset, bytes_rep[offset])
         return BinsonBytes(bytes_val), consumed
-
-    def serialize(self):
-        return to_bytes(self.value)

@@ -12,6 +12,11 @@ class BinsonString(BinsonValue):
     Dummy
     """
 
+    def serialize(self):
+        bytes_rep = to_bytes(self.value.encode('utf8'))
+        bytes_rep[0] -= 0x04
+        return bytes_rep
+
     @staticmethod
     def instances():
         return six.string_types
@@ -31,8 +36,3 @@ class BinsonString(BinsonValue):
             bytes_rep, offset, bytes_rep[offset] + 0x04)
         str_val = bytes_rep.decode('utf8')
         return BinsonString(str_val), consumed
-
-    def serialize(self):
-        bytes_rep = to_bytes(self.value.encode('utf8'))
-        bytes_rep[0] -= 0x04
-        return bytes_rep
