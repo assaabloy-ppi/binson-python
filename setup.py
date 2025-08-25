@@ -9,6 +9,8 @@ setuptools.setup(
     author="Simon Johansson",
     author_email="simon.johansson@assaabloy.com",
     description="A python imlementation of Binson",
+    license="MIT",
+    license_files=('LICENSE',),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/assaabloy-ppi/binson-python",
@@ -16,7 +18,6 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
