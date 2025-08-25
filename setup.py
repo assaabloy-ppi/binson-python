@@ -11,7 +11,7 @@ setuptools.setup(
     description="A python imlementation of Binson",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/sijohans/sample-project",
+    url="https://github.com/assaabloy-ppi/binson-python",
     packages=setuptools.find_packages(exclude=['tests']),
     classifiers=[
         "Programming Language :: Python :: 2",
